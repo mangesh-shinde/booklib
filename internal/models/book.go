@@ -1,9 +1,9 @@
 package models
 
 type Book struct {
-	Id              int64   `json:"id"`
-	Name            string  `json:"book_name"`
-	Author          string  `json:"author"`
-	PublicationDate string  `json:"publication_date"`
-	Price           float64 `json:"price"`
+	Id              int64   `json:"id" validate:"required"`
+	Name            string  `json:"book_name" validate:"required"`
+	Author          string  `json:"author" validate:"required"`
+	PublicationDate string  `json:"publication_date" validate:"required"`
+	Price           float64 `json:"price" validate:"required"`
 }

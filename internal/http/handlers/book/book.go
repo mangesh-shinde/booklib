@@ -2,9 +2,13 @@ package book
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/mangesh-shinde/booklib/internal/models"
 	"github.com/mangesh-shinde/booklib/internal/utils/response"
 )
@@ -35,13 +39,25 @@ func (b *BookHandler) New(w http.ResponseWriter, r *http.Request) {
 	slog.Info("creating a book")
 	var book models.Book
 	err := json.NewDecoder(r.Body).Decode(&book)
-	if err != nil {
-		response.SendError(w, http.StatusBadRequest, "Bad Request: Please validate input data")
+	if errors.Is(err, io.EOF) {
+		response.SendError(w, http.StatusBadRequest, fmt.Errorf("empty body"))
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(&book)
+	if err != nil {
+		response.SendError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate inputs before sending response
+	if err := validator.New().Struct(book); err != nil {
+		validateErrs := err.(validator.ValidationErrors)
+		resp := response.ValidateErrors(validateErrs)
+		response.WriteJsonResponse(w, http.StatusBadGateway, resp)
+		return
+	}
+
+	response.WriteJsonResponse(w, http.StatusCreated, map[string]string{"success": "OK"})
 
 }
 
