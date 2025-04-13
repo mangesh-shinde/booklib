@@ -33,11 +33,12 @@ func main() {
 
 	// book routes
 	mux.Handle("/api/v1/books", &book.BookHandler{Storage: storage})
+	mux.Handle("/api/v1/books/", &book.BookHandler{Storage: storage})
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Welcome to booklib API"))
-	})
+	// mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	// 	w.WriteHeader(http.StatusOK)
+	// 	w.Write([]byte("Welcome to booklib API"))
+	// })
 
 	// setup server
 	server := http.Server{

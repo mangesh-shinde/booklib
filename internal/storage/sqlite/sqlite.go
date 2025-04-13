@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/mangesh-shinde/booklib/internal/config"
+	"github.com/mangesh-shinde/booklib/internal/models"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -55,4 +56,20 @@ func (s *Sqlite) CreateBook(bookName string, author string, publicationDate stri
 
 	return lastId, nil
 
+}
+
+func (s *Sqlite) GetBook(id int64) (models.Book, error) {
+	stmt, err := s.Db.Prepare("SELECT id, book_name, author, price, publication_date FROM books where id=? LIMIT 1")
+	if err != nil {
+		return models.Book{}, err
+	}
+	defer stmt.Close()
+
+	var book models.Book
+	err = stmt.QueryRow(id).Scan(&book.Id, &book.Name, &book.Author, &book.Price, &book.PublicationDate)
+	if err != nil {
+		return models.Book{}, err
+	}
+
+	return book, nil
 }
