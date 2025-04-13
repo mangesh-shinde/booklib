@@ -12,6 +12,7 @@ import (
 
 	"github.com/mangesh-shinde/booklib/internal/config"
 	"github.com/mangesh-shinde/booklib/internal/http/handlers/book"
+	"github.com/mangesh-shinde/booklib/internal/storage/sqlite"
 )
 
 func main() {
@@ -20,12 +21,18 @@ func main() {
 	cfg := config.MustLoad()
 
 	// setup database
+	storage, err := sqlite.New(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	slog.Info(">> storage initialized")
 
 	// setup router
 	mux := http.NewServeMux()
 
 	// book routes
-	mux.Handle("/api/v1/books", &book.BookHandler{})
+	mux.Handle("/api/v1/books", &book.BookHandler{Storage: storage})
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

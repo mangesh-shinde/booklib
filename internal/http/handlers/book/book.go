@@ -10,10 +10,13 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/mangesh-shinde/booklib/internal/models"
+	"github.com/mangesh-shinde/booklib/internal/storage"
 	"github.com/mangesh-shinde/booklib/internal/utils/response"
 )
 
-type BookHandler struct{}
+type BookHandler struct {
+	Storage storage.Storage
+}
 
 func (b *BookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch {
@@ -57,7 +60,13 @@ func (b *BookHandler) New(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.WriteJsonResponse(w, http.StatusCreated, map[string]string{"success": "OK"})
+	bookId, err := b.Storage.CreateBook(book.Name, book.Author, book.PublicationDate, book.Price)
+	if err != nil {
+		response.SendError(w, http.StatusBadRequest, fmt.Errorf("Error while creating book"))
+		return
+	}
+
+	response.WriteJsonResponse(w, http.StatusCreated, map[string]int64{"book_id": bookId})
 
 }
 
