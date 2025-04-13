@@ -100,3 +100,23 @@ func (s *Sqlite) GetBooks() ([]models.Book, error) {
 
 	return books, nil
 }
+
+func (s *Sqlite) DeleteBook(id int64) (int64, error) {
+	stmt, err := s.Db.Prepare("DELETE FROM books WHERE id = ?")
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+
+	result, err := stmt.Exec(id)
+	if err != nil {
+		return 0, err
+	}
+
+	rowsDeleted, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	return rowsDeleted, nil
+}

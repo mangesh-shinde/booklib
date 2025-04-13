@@ -31,7 +31,7 @@ func (b *BookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case r.Method == http.MethodPost:
 		b.New(w, r)
 		return
-	case r.Method == http.MethodDelete:
+	case r.Method == http.MethodDelete && BookByIdRe.MatchString(r.URL.Path):
 		b.Delete(w, r)
 		return
 	case r.Method == http.MethodPut:
@@ -83,8 +83,21 @@ func (b *BookHandler) New(w http.ResponseWriter, r *http.Request) {
 
 func (b *BookHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	slog.Info("deleting a book")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Book deleted"))
+	matches := BookByIdRe.FindStringSubmatch(r.URL.Path)
+	bookId, err := strconv.ParseInt(matches[1], 10, 64)
+	if err != nil {
+		response.SendError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	rowsDeleted, err := b.Storage.DeleteBook(bookId)
+	if err != nil {
+		response.SendError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	response.WriteJsonResponse(w, http.StatusOK, map[string]int64{"rows_deleted": rowsDeleted})
+
 }
 
 func (b *BookHandler) Update(w http.ResponseWriter, r *http.Request) {
