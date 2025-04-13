@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/mangesh-shinde/booklib/internal/config"
+	"github.com/mangesh-shinde/booklib/internal/http/handlers/book"
 )
 
 func main() {
@@ -22,6 +23,9 @@ func main() {
 
 	// setup router
 	mux := http.NewServeMux()
+
+	// book routes
+	mux.Handle("/api/v1/books", &book.BookHandler{})
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
