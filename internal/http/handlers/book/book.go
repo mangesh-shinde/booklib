@@ -95,8 +95,13 @@ func (b *BookHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 func (b *BookHandler) GetBooks(w http.ResponseWriter, r *http.Request) {
 	slog.Info("fetching books")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Books list here"))
+	books, err := b.Storage.GetBooks()
+	if err != nil {
+		response.SendError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	response.WriteJsonResponse(w, http.StatusOK, books)
 }
 
 func (b *BookHandler) GetBookById(w http.ResponseWriter, r *http.Request) {

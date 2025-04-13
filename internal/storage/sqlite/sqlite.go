@@ -73,3 +73,30 @@ func (s *Sqlite) GetBook(id int64) (models.Book, error) {
 
 	return book, nil
 }
+
+func (s *Sqlite) GetBooks() ([]models.Book, error) {
+	stmt, err := s.Db.Prepare("SELECT id, book_name, author, price, publication_date FROM books")
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var books []models.Book
+	for rows.Next() {
+		var book models.Book
+		err := rows.Scan(&book.Id, &book.Name, &book.Author, &book.Price, &book.PublicationDate)
+		if err != nil {
+			return nil, err
+		}
+
+		books = append(books, book)
+	}
+
+	return books, nil
+}
