@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/mangesh-shinde/booklib/internal/config"
 	"github.com/mangesh-shinde/booklib/internal/models"
@@ -119,4 +120,43 @@ func (s *Sqlite) DeleteBook(id int64) (int64, error) {
 	}
 
 	return rowsDeleted, nil
+}
+
+func (s *Sqlite) UpdateBook(id int64, bookName string, author string, publicationDate string, price float64) (int64, error) {
+	// check if book for given id exists in database
+	stmt, err := s.Db.Prepare("SELECT id FROM books WHERE id = ?")
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+
+	var bookId int64
+	err = stmt.QueryRow(id).Scan(&bookId)
+
+	if err == sql.ErrNoRows {
+		return 0, fmt.Errorf("book not found with id=%s", fmt.Sprint(id))
+	}
+
+	if err != nil {
+		return 0, err
+	}
+
+	// update book details
+	updateStmt, err := s.Db.Prepare("UPDATE books SET book_name=?, author=?, price=?, publication_date=? WHERE id=?")
+	if err != nil {
+		return 0, err
+	}
+	defer updateStmt.Close()
+
+	result, err := updateStmt.Exec(bookName, author, price, publicationDate, bookId)
+	if err != nil {
+		return 0, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	return rowsAffected, nil
 }

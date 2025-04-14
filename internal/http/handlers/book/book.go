@@ -101,9 +101,31 @@ func (b *BookHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (b *BookHandler) Update(w http.ResponseWriter, r *http.Request) {
-	slog.Info("updating a book")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Book updated"))
+	// get BookId to update
+	matches := BookByIdRe.FindStringSubmatch(r.URL.Path)
+	bookId, err := strconv.ParseInt(matches[1], 10, 64)
+	if err != nil {
+		response.SendError(w, http.StatusBadRequest, err)
+		return
+	}
+	slog.Info("updating a book", slog.String("id", fmt.Sprint(bookId)))
+
+	// get updated book details from request body
+	var book models.Book
+	err = json.NewDecoder(r.Body).Decode(&book)
+	if err != nil {
+		response.SendError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// update book details
+	rowsUpdated, err := b.Storage.UpdateBook(bookId, book.Name, book.Author, book.PublicationDate, book.Price)
+	if err != nil {
+		response.SendError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	response.WriteJsonResponse(w, http.StatusOK, map[string]string{"message": fmt.Sprintf("%d book updated", rowsUpdated)})
 }
 
 func (b *BookHandler) GetBooks(w http.ResponseWriter, r *http.Request) {
